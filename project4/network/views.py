@@ -1,10 +1,10 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Post, Comment, Follow, Like
 
 
 def index(request):
@@ -61,3 +61,29 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+def posts(request):
+    start = int(request.GET.get("start"))
+    end = int(request.GET.get("end"))
+
+    if (end > Post.objects.all().count()):
+        posts = []
+        for i in Post.objects.all()[start: Post.objects.all().count()]:
+            posts.append({})
+            posts[-1]["author"] = i.author
+            posts[-1]["content"] = i.content
+            posts[-1]["created"] = i.created
+        ended = 1
+    else:
+        posts = []
+        for i in Post.objects.all()[start: end]:
+            posts.append({})
+            posts[-1]["author"] = i.author
+            posts[-1]["content"] = i.content
+            posts[-1]["created"] = i.created
+        ended = 0
+        
+    return JsonResponse({
+        "ended": ended,
+        "posts": posts
+    })
