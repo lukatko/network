@@ -3,12 +3,18 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+import json
 
 from .models import User, Post, Comment, Follow, Like
 
-
 def index(request):
-    return render(request, "network/index.html")
+    if (request.user.is_authenticated):
+        return render(request, "network/index.html")
+    else:
+        return HttpResponseRedirect(reverse("login"))
 
 
 def login_view(request):
@@ -34,7 +40,6 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("index"))
-
 
 def register(request):
     if request.method == "POST":
@@ -62,28 +67,66 @@ def register(request):
     else:
         return render(request, "network/register.html")
 
+@csrf_exempt
+@login_required
 def posts(request):
-    start = int(request.GET.get("start"))
-    end = int(request.GET.get("end"))
-
-    if (end > Post.objects.all().count()):
-        posts = []
-        for i in Post.objects.all()[start: Post.objects.all().count()]:
-            posts.append({})
-            posts[-1]["author"] = i.author
-            posts[-1]["content"] = i.content
-            posts[-1]["created"] = i.created
-        ended = 1
-    else:
-        posts = []
-        for i in Post.objects.all()[start: end]:
-            posts.append({})
-            posts[-1]["author"] = i.author
-            posts[-1]["content"] = i.content
-            posts[-1]["created"] = i.created
-        ended = 0
-        
+    page = int(request.GET.get("page"))
+    p = Paginator(Post.objects.all()[::-1], 10)
+    next_page = p.page(page)
+    posts = []
+    for i in next_page.object_list:
+        posts.append({})
+        posts[-1]["id"] = i.id
+        posts[-1]["author"] = i.author.username
+        posts[-1]["content"] = i.content
+        posts[-1]["created"] = i.created.strftime("%b %#d %Y, %#I:%M %p")
+        posts[-1]["number_of_likes"] = Like.objects.filter(post = i).count()
+        if (Like.objects.filter(post = i, author = request.user).exists()):
+            posts[-1]["liked"] = 1
+        else:
+            posts[-1]["liked"] = 0
+    print(posts)
     return JsonResponse({
-        "ended": ended,
+        "has_next": next_page.has_next(),
         "posts": posts
     })
+
+@csrf_exempt
+@login_required
+def new_post(request):
+    if (request.method != "POST"):
+        return JsonResponse({"error": "POST request required."}, status=400)
+    author = request.user
+    content = json.loads(request.body)["content"]
+    Post(author = author, content = content).save()
+    return JsonResponse({"message": "Email sent successfully."}, status=201)
+
+@csrf_exempt
+@login_required
+def new_comment(request, post_id):
+    if (request.method != "POST"):
+        return JsonResponse({"error": "POST request required."}, status=400)
+    author = request.user
+    post = Post.objects.get(pk = post_id)
+    content = json.loads(request.body)["content"]
+    Comment(author = author, content = content, post = post).save()
+    return JsonResponse({"message": "Email sent successfully."}, status=201)
+
+@csrf_exempt
+@login_required
+def like(request, post_id):
+    if (request.method != "POST"):
+        return JsonResponse({"error": "POST request required."}, status=400)
+    author = request.user
+    post = Post.objects.get(pk = post_id)
+    Like(author = author, post = post).save()
+    return JsonResponse({"message": "Email sent successfully."}, status=201)
+
+@csrf_exempt
+@login_required
+def follow(request, user_id):
+    if (request.method != "POST"):
+        return JsonResponse({"error": "POST request required."}, status=400)
+    Follow(request.user, user_id).save()
+    return JsonResponse({"message": "Email sent successfully."}, status=201)
+
