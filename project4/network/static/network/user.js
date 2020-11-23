@@ -4,7 +4,7 @@ class Post extends React.Component
     {
         super(props);
         this.state = {
-            hrefpage: "/user/".concat(this.props.post.author)
+            hrefpage: ""
         };
     }
     render() 
@@ -28,44 +28,14 @@ class Posts extends React.Component
         this.state = {
             posts: [],
             has_next: 1,
-            page: 1,
-            new_post: ""
+            page: 1
         };
         this.load_next();
     }
 
-    update = (event) =>
-    {
-        this.setState({
-            new_post: event.target.value
-        });
-    }
-    inputKey = (event) =>
-    {
-        if (event.key === 'Enter')
-        {
-            fetch(`/post`, {
-                method: "POST",
-                body: JSON.stringify({
-                    content: this.state.new_post
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                this.setState({
-                    new_post: "",
-                    posts: [],
-                    page: 1,
-                    has_next: 1
-                });
-                this.load_next();
-            })
-        }
-    }
-
     load_next = () =>
     {
-        fetch(`/posts?page=${this.state.page}`)
+        fetch(`${window.location.href}/posts?page=${this.state.page}`)
         .then(response => response.json())
         .then(data => {
             console.log(data);
@@ -99,10 +69,6 @@ class Posts extends React.Component
         return (
             <div>
                 <h1>Posts</h1>
-                <div className = "post" id = "new_post">
-                    <h3>New post</h3>
-                    <textarea type = "text" value = {this.state.new_post} onChange = {this.update} onKeyPress = {this.inputKey} />
-                </div>
                 {this.state.posts.map((element, i) => {
                     return <Post post = {element} key = {i} />;
                 })}

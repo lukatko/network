@@ -124,9 +124,57 @@ def like(request, post_id):
 
 @csrf_exempt
 @login_required
-def follow(request, user_id):
-    if (request.method != "POST"):
-        return JsonResponse({"error": "POST request required."}, status=400)
-    Follow(request.user, user_id).save()
-    return JsonResponse({"message": "Email sent successfully."}, status=201)
+def follow(request, username):
+    if (request.method != "PUT"):
+        return JsonResponse({"error": "PUT request required."}, status=400)
+    user = User.objects.get(username = username)
+    if (Follow.objects.filter(follower = request.user, following = user).exists()):
+        Follow.objects.get(follower = request.user, following = user).delete()
+    else:
+        Follow(follower = request.user, following = user).save()
+    return JsonResponse({"message": "Succesful"}, status=201)
+
+@login_required
+def user(request, username):
+    user = User.objects.get(username = username)
+    followers = Follow.objects.filter(following = user).count()
+    following = Follow.objects.filter(follower = user).count()
+    if (Follow.objects.filter(follower = request.user, following = user).exists()):
+        flag = "Following"
+    else:
+        flag = "Follow"
+    return render(request, "network/user.html", {
+        "followers": followers,
+        "following": following,
+        "username": username,
+        "flag": flag
+    })
+
+@csrf_exempt
+@login_required
+def user_posts(request, username):
+    user = User.objects.get(username = username)
+    db_posts = Post.objects.filter(author = user)
+    page = int(request.GET.get("page"))
+    p = Paginator(db_posts, 10)
+    next_page = p.page(page)
+    posts = []
+    for i in next_page.object_list:
+        posts.append({})
+        posts[-1]["id"] = i.id
+        posts[-1]["author"] = i.author.username
+        posts[-1]["content"] = i.content
+        posts[-1]["created"] = i.created.strftime("%b %#d %Y, %#I:%M %p")
+        posts[-1]["number_of_likes"] = Like.objects.filter(post = i).count()
+        if (Like.objects.filter(post = i, author = request.user).exists()):
+            posts[-1]["liked"] = 1
+        else:
+            posts[-1]["liked"] = 0
+    return JsonResponse({
+        "has_next": next_page.has_next(),
+        "posts": posts
+    })
+    
+
+
 
