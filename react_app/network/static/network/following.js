@@ -4,7 +4,7 @@ class Post extends React.Component
     {
         super(props);
         this.state = {
-            hrefpage: ""
+            hrefpage: "/user/".concat(this.props.post.author)
         };
     }
     render() 
@@ -35,7 +35,7 @@ class Posts extends React.Component
 
     load_next = () =>
     {
-        fetch(`${window.location.href}/posts?page=${this.state.page}`)
+        fetch(`following/posts?page=${this.state.page}`)
         .then(response => response.json())
         .then(data => {
             console.log(data);

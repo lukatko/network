@@ -175,6 +175,36 @@ def user_posts(request, username):
         "posts": posts
     })
     
+@login_required
+def following(request):
+    return render(request, "network/following.html")
 
-
+@csrf_exempt
+@login_required
+def following_posts(request):
+    following = Follow.objects.filter(follower = request.user)
+    db_posts = []
+    for follow in following:
+        user = follow.following
+        db_posts += (Post.objects.filter(author = user))
+    print(db_posts)
+    page = int(request.GET.get("page"))
+    p = Paginator(db_posts, 10)
+    next_page = p.page(page)
+    posts = []
+    for i in next_page.object_list:
+        posts.append({})
+        posts[-1]["id"] = i.id
+        posts[-1]["author"] = i.author.username
+        posts[-1]["content"] = i.content
+        posts[-1]["created"] = i.created.strftime("%b %#d %Y, %#I:%M %p")
+        posts[-1]["number_of_likes"] = Like.objects.filter(post = i).count()
+        if (Like.objects.filter(post = i, author = request.user).exists()):
+            posts[-1]["liked"] = 1
+        else:
+            posts[-1]["liked"] = 0
+    return JsonResponse({
+        "has_next": next_page.has_next(),
+        "posts": posts
+    })
 
