@@ -4,9 +4,35 @@ class Post extends React.Component
     {
         super(props);
         this.state = {
-            hrefpage: "/user/".concat(this.props.post.author)
+            hrefpage: "/user/".concat(this.props.post.author),
+            number_of_likes: this.props.post.number_of_likes,
+            liked: this.props.post.liked
         };
     }
+    like = () => {
+        fetch(`like/${this.props.post.id}`, {
+            method: "PUT"
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (this.state.liked)
+            {
+                this.setState({
+                    number_of_likes: this.state.number_of_likes - 1,
+                    liked: 0
+                });
+            }
+            else 
+            {
+                this.setState({
+                    number_of_likes: this.state.number_of_likes + 1,
+                    liked: 1
+                });
+            }
+            
+        });
+    }
+
     render() 
     {
         return (
@@ -14,7 +40,10 @@ class Post extends React.Component
                 <a href = {this.state.hrefpage} id = "userlink"><h2>{this.props.post.author}</h2></a>
                 <p>{this.props.post.content}</p>
                 <p>{this.props.post.created}</p>
-                <p>Number of likes: &nbsp; {this.props.post.number_of_likes}</p>
+                <div id = "like">
+                    <span>{this.state.number_of_likes}&nbsp;</span>
+                    <span><i id = "heart_button" className = "fa fa-heart" onClick = {this.like} style = {this.state.liked ? {color: "red"} : {color: "blue"}}></i></span>
+                </div>
             </div>
         );
     }

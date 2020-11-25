@@ -115,11 +115,14 @@ def new_comment(request, post_id):
 @csrf_exempt
 @login_required
 def like(request, post_id):
-    if (request.method != "POST"):
-        return JsonResponse({"error": "POST request required."}, status=400)
+    if (request.method != "PUT"):
+        return JsonResponse({"error": "PUT request required."}, status=400)
     author = request.user
     post = Post.objects.get(pk = post_id)
-    Like(author = author, post = post).save()
+    if (Like.objects.filter(author = author, post = post).exists()):
+        Like.objects.get(author = author, post = post).delete()
+    else:
+        Like(author = author, post = post).save()
     return JsonResponse({"message": "Email sent successfully."}, status=201)
 
 @csrf_exempt
