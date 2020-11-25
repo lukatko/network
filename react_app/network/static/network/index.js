@@ -4,11 +4,15 @@ class Post extends React.Component
     {
         super(props);
         this.state = {
-            hrefpage: "/user/".concat(this.props.post.author),
+            hrefpage_author: "/user/".concat(this.props.post.author),
             number_of_likes: this.props.post.number_of_likes,
-            liked: this.props.post.liked
+            liked: this.props.post.liked,
+            edit_post: this.props.post.content,
+            id_post: `post_body${this.props.post.id}`,
+            id_edit: `edit_body${this.props.post.id}`
         };
     }
+
     like = () => {
         fetch(`like/${this.props.post.id}`, {
             method: "PUT"
@@ -33,16 +37,64 @@ class Post extends React.Component
         });
     }
 
+    update = (event) => {
+        this.setState({
+            edit_post: event.target.value
+        });
+    }
+
+    inputKey = (event) =>
+    {
+        if (event.key === 'Enter')
+        {
+            fetch(`/post/${this.props.post.id}`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    content: this.state.edit_post
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.querySelector(`#${this.state.id_post}`).style.display = "block";
+                document.querySelector(`#${this.state.id_edit}`).style.display = "none";
+            })
+        }
+    }
+
+    edit()
+    {
+        if (this.props.username === this.props.post.author)
+        {
+            return (
+                <a id = "edit" onClick = {this.edit_post}>Edit</a>
+            )
+        }
+    }
+
+    edit_post = () =>
+    {
+        document.querySelector(`#${this.state.id_post}`).style.display = "none";
+        document.querySelector(`#${this.state.id_edit}`).style.display = "block";
+    }
+
+
     render() 
     {
         return (
             <div className = "post">
-                <a href = {this.state.hrefpage} id = "userlink"><h2>{this.props.post.author}</h2></a>
-                <p>{this.props.post.content}</p>
-                <p>{this.props.post.created}</p>
-                <div id = "like">
-                    <span>{this.state.number_of_likes}&nbsp;</span>
-                    <span><i id = "heart_button" className = "fa fa-heart" onClick = {this.like} style = {this.state.liked ? {color: "red"} : {color: "blue"}}></i></span>
+                <a href = {this.state.hrefpage_author} id = "userlink"><h2>{this.props.post.author}</h2></a>
+                {this.edit()}
+                <div id = {this.state.id_post}>
+                    <p id = "content">{this.state.edit_post}</p>
+                    <p>{this.props.post.created}</p>
+                    <div id = "like">
+                        <span>{this.state.number_of_likes}&nbsp;</span>
+                        <span><i id = "heart_button" className = "fa fa-heart" onClick = {this.like} style = {this.state.liked ? {color: "red"} : {color: "blue"}}></i></span>
+                    </div>
+                </div>
+                <div id = {this.state.id_edit} style = {{display:"none"}}>
+                    <h3>Edit post</h3>
+                    <textarea type = "text" value = {this.state.edit_post} onChange = {this.update} onKeyPress = {this.inputKey} />
                 </div>
             </div>
         );
@@ -58,9 +110,21 @@ class Posts extends React.Component
             posts: [],
             has_next: 1,
             page: 1,
-            new_post: ""
+            new_post: "",
+            username: ""
         };
         this.load_next();
+    }
+
+    componentDidMount()
+    {
+        fetch("/get_user")
+        .then(response => response.json())
+        .then(data => {
+            this.setState({
+                username: data.username
+            })
+        });
     }
 
     update = (event) =>
@@ -133,7 +197,7 @@ class Posts extends React.Component
                     <textarea type = "text" value = {this.state.new_post} onChange = {this.update} onKeyPress = {this.inputKey} />
                 </div>
                 {this.state.posts.map((element, i) => {
-                    return <Post post = {element} key = {i} />;
+                    return <Post post = {element} key = {i} username = {this.state.username} />;
                 })}
                 {this.next()}
             </div>

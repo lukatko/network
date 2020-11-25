@@ -67,7 +67,6 @@ textarea {
     }
 }
 
-
 #heart_button:hover {
     cursor: pointer;
 }
@@ -76,4 +75,13 @@ textarea {
     margin-bottom: 1rem;
     text-align: left;
     margin-left: 40%;
+}
+
+#edit {
+    color: silver;
+}
+
+#edit:hover {
+    cursor: pointer;
+    text-decoration: underline;
 }

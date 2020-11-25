@@ -211,3 +211,20 @@ def following_posts(request):
         "posts": posts
     })
 
+@csrf_exempt
+@login_required
+def get_user(request):
+    return JsonResponse({
+        "username": request.user.username
+    })
+
+@csrf_exempt
+@login_required
+def edit_post(request, post_id):
+    post = Post.objects.get(pk = post_id)
+    if (request.method != "PUT"):
+        return JsonResponse({"error": "PUT request required."}, status=400)
+    content = json.loads(request.body)["content"]
+    post.content = content
+    post.save()
+    return JsonResponse({"message": "Succesful"}, status=201)
