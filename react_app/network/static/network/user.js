@@ -293,7 +293,7 @@ class Posts extends React.Component
             <div>
                 <h1>Posts</h1>
                 {this.state.posts.map((element, i) => {
-                    return <Post post = {element} key =  {i + (this.state.page - 1) * 5} username = {this.state.username} />;
+                    return <Post post = {element} key =  {element.id} username = {this.state.username} />;
                 })}
                 <Pagination current_page = {this.state.page} handler = {this.handler} number_of_pages = {this.number_of_pages} has_next = {this.state.has_next} has_previous = {this.state.has_previous} />
             </div>

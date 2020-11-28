@@ -326,7 +326,7 @@ class Posts extends React.Component
                     <textarea type = "text" value = {this.state.new_post} onChange = {this.update} onKeyPress = {this.inputKey} />
                 </div>
                 {this.state.posts.map((element, i) => {
-                    return <Post post = {element} key = {i + (this.state.page - 1) * 5} username = {this.state.username} />;
+                    return <Post post = {element} key = {element.id} username = {this.state.username} />;
                 })}
                 <Pagination current_page = {this.state.page} handler = {this.handler} number_of_pages = {this.number_of_pages} has_next = {this.state.has_next} has_previous = {this.state.has_previous} />
             </div>
