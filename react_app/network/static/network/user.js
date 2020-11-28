@@ -1,3 +1,138 @@
+class Pagination extends React.Component
+{
+    constructor(props)
+    {
+        super(props);
+    }
+    active = () =>
+    {
+        console.log(this.props.number_of_pages);
+        if (this.props.number_of_pages == 1)
+        {
+            return (
+                <ul className="pagination">
+                    <li className="page-item active"><a className="page-link">1</a></li>
+                </ul>
+            );
+        }
+        else if (this.props.number_of_pages == 2)
+        {
+            if (this.props.current_page == 1)
+            {
+                return (
+                    <ul className="pagination">
+                        <li className="page-item active"><a className="page-link">1</a></li>
+                        <li className="page-item" onClick = {this.next}><a className="page-link">2</a></li>
+                        <li className="page-item" onClick = {this.next}>
+                            <a className="page-link" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                                <span className="sr-only">Next</span>
+                            </a>
+                        </li>
+                    </ul>
+                )
+            }
+            else
+            {   return (
+                    <ul className="pagination">
+                        <li className="page-item" onClick = {this.previous}>
+                            <a className="page-link" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                                <span className="sr-only">Previous</span>
+                            </a>
+                        </li>
+                        <li className="page-item" onClick = {this.previous}><a className="page-link">1</a></li>
+                        <li className="page-item active"><a className="page-link">2</a></li>
+                    </ul>
+                );
+            }
+        }
+        else if (!this.props.has_previous)
+        {
+            return (
+                <ul className="pagination">
+                    <li className="page-item active"><a className="page-link">1</a></li>
+                    <li className="page-item" onClick = {this.next}><a className="page-link">2</a></li>
+                    <li className="page-item" onClick = {this.next_two}><a className="page-link">3</a></li>
+                    <li className="page-item" onClick = {this.next}>
+                        <a className="page-link" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span className="sr-only">Next</span>
+                        </a>
+                    </li>
+                </ul>
+            );
+        }
+        else if (!this.props.has_next)
+        {
+            return (
+                <ul className="pagination">
+                    <li className="page-item" onClick = {this.previous}>
+                        <a className="page-link" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span className="sr-only">Previous</span>
+                        </a>
+                    </li>
+                    <li className="page-item" onClick = {this.previous_two}><a className="page-link">{this.props.current_page - 2}</a></li>
+                    <li className="page-item" onClick = {this.previous}><a className="page-link">{this.props.current_page - 1}</a></li>
+                    <li className="page-item active"><a className="page-link">{this.props.current_page}</a></li>
+                </ul>
+            )
+        }
+        else
+        {
+            return (
+                <ul className="pagination">
+                    <li className="page-item" onClick = {this.previous}>
+                        <a className="page-link" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                            <span className="sr-only">Previous</span>
+                        </a>
+                    </li>
+                    <li className="page-item" onClick = {this.previous}><a className="page-link">{this.props.current_page - 1}</a></li>
+                    <li className="page-item active"><a className="page-link">{this.props.current_page}</a></li>
+                    <li className="page-item" onClick = {this.next}><a className="page-link">{this.props.current_page + 1}</a></li>
+                    <li className="page-item" onClick = {this.next}>
+                        <a className="page-link" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                            <span className="sr-only">Next</span>
+                        </a>
+                    </li>
+                </ul>
+            );
+        }
+    }
+
+    next = () =>
+    {
+        this.props.handler(this.props.current_page + 1);
+    }
+
+    next_two = () =>
+    {
+        this.props.handler(this.props.current_page + 2);
+    }
+
+    previous = () =>
+    {
+        this.props.handler(this.props.current_page - 1);
+    }
+
+    previous_two = () =>
+    {
+        this.props.handler(this.props.current_page - 2);
+    }
+
+    render()
+    {
+        return(
+            <nav aria-label="Page navigation example" className = "paginator">
+                {this.active()}
+            </nav>
+        )
+    }
+}
+
 class Post extends React.Component 
 {
     constructor(props)
@@ -110,9 +245,12 @@ class Posts extends React.Component
             posts: [],
             has_next: 1,
             page: 1,
-            username: ""
+            username: "",
+            has_previous: 0
         };
-        this.load_next();
+        this.number_of_pages;
+        this.handler = this.handler.bind(this);
+        this.load_next(1);
     }
 
     componentDidMount()
@@ -126,35 +264,27 @@ class Posts extends React.Component
         });
     }
 
-    load_next = () =>
+    load_next = (page) =>
     {
-        fetch(`${window.location.href}/posts?page=${this.state.page}`)
+        fetch(`${window.location.href}/posts?page=${page}`)
         .then(response => response.json())
         .then(data => {
             console.log(data);
+            this.number_of_pages = data.number_of_pages;
             this.setState({
-                posts: this.state.posts.concat(data.posts),
+                posts: data.posts,
                 has_next: data.has_next,
-                page: this.state.page + 1
+                has_previous: data.has_previous,
+                page: page
             });
         });
 
     }
 
-    next()
+    handler(page)
     {
-        if (this.state.has_next)
-        {
-            return (
-                <div id = "load_next" onClick = {this.load_next}>Load next posts</div>
-            )
-        }
-        else
-        {
-            return (
-                <h4>No more posts to show</h4>
-            )
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this.load_next(page);
     }
 
     render() 
@@ -163,9 +293,9 @@ class Posts extends React.Component
             <div>
                 <h1>Posts</h1>
                 {this.state.posts.map((element, i) => {
-                    return <Post post = {element} key = {i} username = {this.state.username} />;
+                    return <Post post = {element} key =  {i + (this.state.page - 1) * 5} username = {this.state.username} />;
                 })}
-                {this.next()}
+                <Pagination current_page = {this.state.page} handler = {this.handler} number_of_pages = {this.number_of_pages} has_next = {this.state.has_next} has_previous = {this.state.has_previous} />
             </div>
         );
     }

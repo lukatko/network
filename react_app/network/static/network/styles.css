@@ -85,3 +85,16 @@ textarea {
     cursor: pointer;
     text-decoration: underline;
 }
+
+.pagination:hover {
+    cursor: pointer;
+}
+
+.paginator {
+    margin: 30px auto;
+}
+
+.pagination {
+    justify-content: center;
+}
+

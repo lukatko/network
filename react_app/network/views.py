@@ -71,7 +71,7 @@ def register(request):
 @login_required
 def posts(request):
     page = int(request.GET.get("page"))
-    p = Paginator(Post.objects.all()[::-1], 10)
+    p = Paginator(Post.objects.all()[::-1], 5)
     next_page = p.page(page)
     posts = []
     for i in next_page.object_list:
@@ -87,7 +87,9 @@ def posts(request):
             posts[-1]["liked"] = 0
     print(posts)
     return JsonResponse({
+        "number_of_pages": p.num_pages,
         "has_next": next_page.has_next(),
+        "has_previous": next_page.has_previous(),
         "posts": posts
     })
 
@@ -159,7 +161,7 @@ def user_posts(request, username):
     user = User.objects.get(username = username)
     db_posts = Post.objects.filter(author = user)
     page = int(request.GET.get("page"))
-    p = Paginator(db_posts, 10)
+    p = Paginator(db_posts, 5)
     next_page = p.page(page)
     posts = []
     for i in next_page.object_list:
@@ -174,7 +176,9 @@ def user_posts(request, username):
         else:
             posts[-1]["liked"] = 0
     return JsonResponse({
+        "number_of_pages": p.num_pages,
         "has_next": next_page.has_next(),
+        "has_previous": next_page.has_previous(),
         "posts": posts
     })
     
@@ -192,7 +196,7 @@ def following_posts(request):
         db_posts += (Post.objects.filter(author = user))
     print(db_posts)
     page = int(request.GET.get("page"))
-    p = Paginator(db_posts, 10)
+    p = Paginator(db_posts, 5)
     next_page = p.page(page)
     posts = []
     for i in next_page.object_list:
@@ -207,7 +211,9 @@ def following_posts(request):
         else:
             posts[-1]["liked"] = 0
     return JsonResponse({
+        "number_of_pages": p.num_pages,
         "has_next": next_page.has_next(),
+        "has_previous": next_page.has_previous(),
         "posts": posts
     })
 
